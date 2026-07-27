@@ -1,0 +1,98 @@
+from .schemas import (
+    CreateTaskRequest,
+    CreateTaskResponse,
+    GetTasksByProjectResponse,
+    UpdateTask
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from app.projects.models import ProjectsTable
+from .models import TasksTable
+class TasksService:
+
+    @staticmethod
+    async def create_task(
+        task: CreateTaskRequest,
+        user_id: int,
+        db: AsyncSession
+    ):
+        result = await db.execute(select(ProjectsTable).where(ProjectsTable.id == task.project_id))
+        
+        project = result.scalar_one_or_none()
+        
+        if (project is None):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        
+        new_task = TasksTable(
+                {**task.model_dump(exclude_unset=True), "user_id": user_id}
+            )
+        
+        db.add(new_task)
+        
+        await db.commit()
+        await db.refresh(new_task)
+
+        return new_task
+
+    @staticmethod
+    async def get_tasks_by_project(
+        project_id: int,
+        user_id: int,
+        db: AsyncSession
+    ):
+        result = await db.execute(select(TasksTable).where(
+                TasksTable.project_id == project_id, 
+                TasksTable.owner_id == user_id
+                ))
+        
+        tasks = result.scalars().all()
+        
+        if not tasks:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            
+        
+        return tasks
+        
+
+    @staticmethod
+    async def update_task(
+        task_id: int,
+        updated_info: UpdateTask,
+        user_id: int,
+        db: AsyncSession
+    ):
+        result = await db.execute(select(TasksTable).where(TasksTable.id == task_id))
+        
+        task = result.scalar_one_or_none()
+        
+        if (task is None):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            
+        updated_data = {**updated_info.model_dump(exclude_unset=True), "owner_id": user_id}
+        
+        for field, value in updated_data.items():
+            setattr(task, field, value)
+        
+        await db.commit()
+        await db.refresh(task)
+        
+        return task 
+
+    @staticmethod
+    async def delete_task(
+        task_id: int,
+        user_id: int,
+        db: AsyncSession
+    ):
+        result = await db.execute(select(TasksTable).where(TasksTable.id == task_id, TasksTable.owner_id == user_id))
+        
+        task = result.scalar_one_or_none()
+        
+        if (task is None):
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            
+        await db.delete(task)
+        await db.commit()
+
+        return None

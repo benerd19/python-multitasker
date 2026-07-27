@@ -11,6 +11,7 @@ from .schemas import (
     GetTasksByProjectResponse,
     UpdateTask
 )
+from .service import TasksService
 
 
 router = APIRouter(prefix='/tasks', tags=["Tasks"])
@@ -21,28 +22,7 @@ async def create_task(
     user_id: int = Depends(get_user_id),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(ProjectsTable).where(ProjectsTable.id == task.project_id))
-
-    project = result.scalar_one_or_none()
-
-    if (project is None):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    new_task = TasksTable(
-        deadline=task.deadline,
-        label=task.label,
-        description=task.description,
-        priority=task.priority,
-        owner_id=user_id,
-        project_id=task.project_id
-    )
-
-    db.add(new_task)
-
-    await db.commit()
-    await db.refresh(new_task)
-
-    return new_task
+    return await TasksService.create_task(task, user_id, db)
 
 @router.get('/project/{project_id}', response_model=list[GetTasksByProjectResponse])
 async def get_tasks_by_project(
@@ -50,18 +30,7 @@ async def get_tasks_by_project(
     user_id: int = Depends(get_user_id),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(TasksTable).where(
-        TasksTable.project_id == project_id, 
-        TasksTable.owner_id == user_id
-        ))
-
-    tasks = result.scalars().all()
-
-    if not tasks:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    
-
-    return tasks
+    return await TasksService.get_tasks_by_project(project_id, user_id, db)
 
 @router.patch('/{task_id}')
 async def update_task(
@@ -70,22 +39,7 @@ async def update_task(
     user_id: int = Depends(get_user_id),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(TasksTable).where(TasksTable.id == task_id))
-
-    task = result.scalar_one_or_none()
-
-    if (task is None):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    
-    updated_data = {**updated_info.model_dump(exclude_unset=True), "owner_id": user_id}
-
-    for field, value in updated_data.items():
-        setattr(task, field, value)
-
-    await db.commit()
-    await db.refresh(task)
-
-    return task    
+    return await TasksService.update_task(task_id, updated_info, user_id, db)
 
 @router.delete('/{task_id}')
 async def delete_task(
@@ -93,14 +47,7 @@ async def delete_task(
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_user_id)
 ):
-    result = await db.execute(select(TasksTable).where(TasksTable.id == task_id, TasksTable.owner_id == user_id))
 
-    task = result.scalar_one_or_none()
-
-    if (task is None):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    
-    await db.delete(task)
-    await db.commit()
+    await TasksService.delete_task(task_id, user_id, db)
 
     return None
