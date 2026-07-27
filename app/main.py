@@ -4,8 +4,12 @@ from app.users.router import router as users_router
 from app.subtasks.router import router as subtask_router
 from app.tasks.router import router as task_router
 from app.categories.router import router as categories_router
+from app.core.exceptions import AppException
+from app.core.exception_handler import app_exception_handler
 
 app = FastAPI()
+
+app.add_exception_handler(AppException, app_exception_handler)
 
 app.include_router(projects_router, prefix='/api/v1')
 app.include_router(users_router, prefix='/api/v1')

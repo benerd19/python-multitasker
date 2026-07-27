@@ -39,12 +39,21 @@ class TasksService:
     async def get_tasks_by_project(
         project_id: int,
         user_id: int,
-        db: AsyncSession
+        db: AsyncSession,
+        per_page: int,
+        page: int
     ):
-        result = await db.execute(select(TasksTable).where(
+        offset = (per_page * (page - 1))
+        
+        result = await db.execute(
+            select(TasksTable)
+            .limit(per_page)
+            .offset(offset)
+            .where(
                 TasksTable.project_id == project_id, 
                 TasksTable.owner_id == user_id
                 ))
+        
         
         tasks = result.scalars().all()
         
