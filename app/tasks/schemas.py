@@ -10,6 +10,7 @@ class CreateTaskRequest(TasksBase):
     label: str
     description: str
     priority: Priorities
+    project_id: int
 
 class CreateTaskResponse(CreateTaskRequest):
     id: int
@@ -35,3 +36,4 @@ class UpdateTask(BaseModel):
     label: str | None = None
     description: str | None = None
     priority: Priorities | None = None
+    project_id: int

@@ -15,14 +15,13 @@ from .schemas import (
 
 router = APIRouter(prefix='/tasks', tags=["Tasks"])
 
-@router.post('/{project_id}/tasks', response_model=CreateTaskResponse)
+@router.post('/', response_model=CreateTaskResponse)
 async def create_task(
-    project_id: int,
     task: CreateTaskRequest,
     user_id: int = Depends(get_user_id),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(ProjectsTable).where(ProjectsTable.id == project_id))
+    result = await db.execute(select(ProjectsTable).where(ProjectsTable.id == task.project_id))
 
     project = result.scalar_one_or_none()
 
@@ -35,7 +34,7 @@ async def create_task(
         description=task.description,
         priority=task.priority,
         owner_id=user_id,
-        project_id=project.id
+        project_id=task.project_id
     )
 
     db.add(new_task)
@@ -45,7 +44,7 @@ async def create_task(
 
     return new_task
 
-@router.get('/{project_id}/tasks', response_model=list[GetTasksByProjectResponse])
+@router.get('/project/{project_id}', response_model=list[GetTasksByProjectResponse])
 async def get_tasks_by_project(
     project_id: int,
     user_id: int = Depends(get_user_id),
@@ -64,9 +63,8 @@ async def get_tasks_by_project(
 
     return tasks
 
-@router.patch('/{project_id}/tasks/{task_id}')
+@router.patch('/{task_id}')
 async def update_task(
-    project_id: int,
     task_id: int,
     updated_info: UpdateTask,
     user_id: int = Depends(get_user_id),
@@ -79,7 +77,7 @@ async def update_task(
     if (task is None):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     
-    updated_data = {**updated_info.model_dump(exclude_unset=True), "project_id": project_id, "owner_id": user_id}
+    updated_data = {**updated_info.model_dump(exclude_unset=True), "owner_id": user_id}
 
     for field, value in updated_data.items():
         setattr(task, field, value)
@@ -89,7 +87,7 @@ async def update_task(
 
     return task    
 
-@router.delete('/{project_id}/tasks/{task_id}')
+@router.delete('/{task_id}')
 async def delete_task(
     task_id: int,
     db: AsyncSession = Depends(get_db),
