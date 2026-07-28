@@ -1,15 +1,17 @@
-from fastapi import APIRouter, HTTPException, Request, Response, Depends, status
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.deps import get_user_id
 from app.database import get_db
+
 from .schemas import (
     CategoriesByUserResponse,
     CreateCategoryRequest,
     CreateCategoryResponse,
     GetCategoryResponse,
     UpdateCategoryRequest,
-    UpdateCategoryResponse
+    UpdateCategoryResponse,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 from .service import CategoriesService
 
 router = APIRouter(prefix='/categories', tags=["Categories"])
@@ -57,4 +59,3 @@ async def delete_category(
 ):
     await CategoriesService.delete_category(category_id, user_id, db)
 
-    return None

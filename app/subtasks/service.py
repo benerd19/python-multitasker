@@ -1,13 +1,16 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import NotFoundError
+from app.tasks.models import TasksTable
+
+from .models import SubTasksTable
 from .schemas import (
     CreateSubtaskRequest,
     UpdateSubtaskRequest,
 )
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from .models import SubTasksTable
-from sqlalchemy import select
-from app.core.exceptions import NotFoundError
-from app.tasks.models import TasksTable
+
+
 class SubtasksService:
 
     @staticmethod
@@ -103,4 +106,3 @@ class SubtasksService:
         await db.delete(subtask)
         await db.commit()
 
-        return None

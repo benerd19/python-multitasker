@@ -1,17 +1,19 @@
 
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.deps import get_user_id
 from app.database import get_db
-from fastapi import APIRouter, HTTPException, Request, Response, Depends, status
 from app.users.schemas import (
-    UsersCreateRequest, 
-    UsersCreateResponse, 
-    UsersGetInfoResponse, 
-    UsersAuthRequest, 
-    UsersAuthResponse, 
-    UsersPartialUpdate)
-from sqlalchemy.ext.asyncio import AsyncSession
-from .service import UsersService
+    UsersAuthRequest,
+    UsersAuthResponse,
+    UsersCreateRequest,
+    UsersCreateResponse,
+    UsersGetInfoResponse,
+    UsersPartialUpdate,
+)
 
+from .service import UsersService
 
 router = APIRouter(prefix='/users', tags=['Users'])
 
@@ -87,5 +89,4 @@ async def delete_user(
 ):
     
     await UsersService.delete_user(user_id, db)
-    return None
     

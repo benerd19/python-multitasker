@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends
-from app.database import get_db
-from .schemas import (
-    ProjectResponse, 
-    ProjectCreateRequest, 
-    ProjectCreateResponse, 
-    ProjectUpdateRequest, 
-    ProjectUpdateResponse, 
-    )
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.deps import get_user_id
+from app.database import get_db
+
+from .schemas import (
+    ProjectCreateRequest,
+    ProjectCreateResponse,
+    ProjectResponse,
+    ProjectUpdateRequest,
+    ProjectUpdateResponse,
+)
 from .service import ProjectService
 
 router = APIRouter(prefix='/projects', tags=['Projects'])
@@ -47,7 +49,6 @@ async def delete_project(
     user_id: int = Depends(get_user_id)
 ):
     await ProjectService.delete_project(project_id, db, user_id)
-    return None
 
 
     

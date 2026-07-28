@@ -1,9 +1,11 @@
-from sqlalchemy import String, Date, ForeignKey
-
-from app.database import Base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date
+
+from sqlalchemy import Date, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.core.enums import Priorities
+from app.database import Base
+
 
 class SubTasksTable(Base):
     __tablename__ = 'subtasks'

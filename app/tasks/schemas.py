@@ -1,6 +1,9 @@
-from pydantic import BaseModel, ConfigDict
-from app.core.enums import Priorities
 from datetime import date
+
+from pydantic import BaseModel, ConfigDict
+
+from app.core.enums import Priorities
+
 
 class TasksBase(BaseModel):
     pass

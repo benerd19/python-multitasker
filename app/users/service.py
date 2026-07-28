@@ -1,14 +1,20 @@
-from sqlalchemy import select, delete
-from app.core.security import create_tokens, decode_token, hash_password, verify_password
-from .models import UsersTable
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.users.schemas import (
-    UsersCreateRequest, 
-    UsersAuthRequest, 
-    UsersPartialUpdate)
 import asyncio
-from fastapi import HTTPException, status
-from app.core.exceptions import NotFoundError, ForbiddenError, UnauthorizedError
+
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
+from app.core.security import (
+    create_tokens,
+    decode_token,
+    hash_password,
+    verify_password,
+)
+from app.users.schemas import UsersAuthRequest, UsersCreateRequest, UsersPartialUpdate
+
+from .models import UsersTable
+
+
 class UsersService:
 
     @staticmethod
@@ -125,7 +131,6 @@ class UsersService:
 
         await db.commit()
 
-        return None 
         
 
 

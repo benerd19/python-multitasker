@@ -1,6 +1,6 @@
 class AppException(Exception):
 
-    def __init__(self, status_code: int, detail: str, error_code: str = None):
+    def __init__(self, status_code: int, detail: str, error_code: str | None = None):
         self.status_code = status_code
         self.detail = detail
         self.error_code = error_code

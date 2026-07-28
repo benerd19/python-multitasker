@@ -1,12 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from .models import ProjectsTable
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.categories.models import ActivityCategoriesTable
-from .schemas import (
-    ProjectCreateRequest
-)
-from fastapi import HTTPException, status
 from app.core.exceptions import NotFoundError
+
+from .models import ProjectsTable
+from .schemas import ProjectCreateRequest
+
 
 class ProjectService: 
 
@@ -111,4 +111,3 @@ class ProjectService:
         await db.delete(project)
         await db.commit()
 
-        return None

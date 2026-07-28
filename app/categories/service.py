@@ -1,12 +1,15 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.exceptions import NotFoundError
+
+from .models import ActivityCategoriesTable
 from .schemas import (
     CreateCategoryRequest,
     UpdateCategoryRequest,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-from .models import ActivityCategoriesTable
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from app.core.exceptions import NotFoundError
+
 
 class CategoriesService:
 
@@ -107,4 +110,3 @@ class CategoriesService:
         await db.delete(category)
         await db.commit()
         
-        return None

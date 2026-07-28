@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Response
+
+from app.categories.router import router as categories_router
+from app.core.exception_handler import app_exception_handler
+from app.core.exceptions import AppException
 from app.projects.router import router as projects_router
-from app.users.router import router as users_router
 from app.subtasks.router import router as subtask_router
 from app.tasks.router import router as task_router
-from app.categories.router import router as categories_router
-from app.core.exceptions import AppException
-from app.core.exception_handler import app_exception_handler
+from app.users.router import router as users_router
 
 app = FastAPI()
 

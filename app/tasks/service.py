@@ -1,13 +1,13 @@
-from .schemas import (
-    CreateTaskRequest,
-    UpdateTask
-)
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
 from sqlalchemy import select
-from app.projects.models import ProjectsTable
-from .models import TasksTable
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.exceptions import NotFoundError
+from app.projects.models import ProjectsTable
+
+from .models import TasksTable
+from .schemas import CreateTaskRequest, UpdateTask
+
+
 class TasksService:
 
     @staticmethod
@@ -113,4 +113,3 @@ class TasksService:
         await db.delete(task)
         await db.commit()
 
-        return None

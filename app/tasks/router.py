@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, Query
-from app.database import get_db
-from app.core.deps import get_user_id
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.deps import get_user_id
+from app.database import get_db
+
 from .schemas import (
     CreateTaskRequest,
     CreateTaskResponse,
     GetTasksByProjectResponse,
-    UpdateTask
+    UpdateTask,
 )
 from .service import TasksService
-
 
 router = APIRouter(prefix='/tasks', tags=["Tasks"])
 
@@ -49,4 +50,3 @@ async def delete_task(
 
     await TasksService.delete_task(task_id, user_id, db)
 
-    return None

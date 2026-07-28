@@ -1,17 +1,17 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.deps import get_user_id
+from app.database import get_db
+
 from .schemas import (
     CreateSubtaskRequest,
     CreateSubtaskResponse,
     GetSubtasksResponse,
     UpdateSubtaskRequest,
-    UpdateSubtaskResponse
+    UpdateSubtaskResponse,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.deps import get_user_id
-from app.database import get_db
-from fastapi import APIRouter, Depends
-
 from .service import SubtasksService
-
 
 router = APIRouter(prefix='/subtasks', tags=["Subtasks"])
 
@@ -50,4 +50,3 @@ async def delete_subtask(
 ):
     await SubtasksService.delete_subtask(subtask_id, db, user_id)
 
-    return None

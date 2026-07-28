@@ -1,6 +1,9 @@
 from datetime import date
+
 from pydantic import BaseModel
+
 from app.core.enums import Priorities
+
 
 class SubtaskBase(BaseModel):
     pass
