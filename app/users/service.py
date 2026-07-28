@@ -8,6 +8,7 @@ from app.users.schemas import (
     UsersPartialUpdate)
 import asyncio
 from fastapi import HTTPException, status
+from app.core.exceptions import NotFoundError, ForbiddenError, UnauthorizedError
 class UsersService:
 
     @staticmethod
@@ -38,7 +39,7 @@ class UsersService:
         user_info = result.scalars().first()
         
         if user_info is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise NotFoundError('Пользователь не найден')
         
         return user_info
 
@@ -53,12 +54,12 @@ class UsersService:
         found_user = result.scalars().first()
         
         if (found_user is None): 
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+            raise ForbiddenError()
             
         is_valid = await asyncio.to_thread(verify_password, found_user.password, user.password)
         
         if (not is_valid):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+            raise ForbiddenError()
         
         access, refresh = create_tokens({"user_id": found_user.id})
 
@@ -72,19 +73,19 @@ class UsersService:
         payload = decode_token(refresh_token)
         
         if (payload is None):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise UnauthorizedError()
             
         user_id = payload.get("user_id")
         
         if (user_id is None):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise UnauthorizedError()
             
         result = await db.execute(select(UsersTable).where(UsersTable.id == user_id))
         
         user = result.scalar_one_or_none()
         
         if (user is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Пользователь не найден')
             
         access, refresh = create_tokens({"user_id": user.id})
         
@@ -101,7 +102,7 @@ class UsersService:
         user = result.scalar_one_or_none()
         
         if (user is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Пользователь не найден')
         
         updated_user = updated_data.model_dump(exclude_unset=True)
         
@@ -120,7 +121,7 @@ class UsersService:
         result = await db.execute(delete(UsersTable).where(UsersTable.id == user_id))
             
         if (result.rowcount == 0):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Пользователь не найден')
 
         await db.commit()
 

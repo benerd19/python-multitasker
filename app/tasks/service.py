@@ -1,7 +1,5 @@
 from .schemas import (
     CreateTaskRequest,
-    CreateTaskResponse,
-    GetTasksByProjectResponse,
     UpdateTask
 )
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +7,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from app.projects.models import ProjectsTable
 from .models import TasksTable
+from app.core.exceptions import NotFoundError
 class TasksService:
 
     @staticmethod
@@ -22,10 +21,11 @@ class TasksService:
         project = result.scalar_one_or_none()
         
         if (project is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Проект не найден')
         
         new_task = TasksTable(
-                {**task.model_dump(exclude_unset=True), "user_id": user_id}
+                **task.model_dump(), 
+                owner_id=user_id
             )
         
         db.add(new_task)
@@ -58,7 +58,7 @@ class TasksService:
         tasks = result.scalars().all()
         
         if not tasks:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Задачи не найдены')
             
         
         return tasks
@@ -71,14 +71,19 @@ class TasksService:
         user_id: int,
         db: AsyncSession
     ):
-        result = await db.execute(select(TasksTable).where(TasksTable.id == task_id))
+        result = await db.execute(
+            select(TasksTable)
+            .where(
+                TasksTable.id == task_id,
+                TasksTable.owner_id == user_id
+                ))
         
         task = result.scalar_one_or_none()
         
-        if (task is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if task is None:
+            raise NotFoundError('Задача не найдена')
             
-        updated_data = {**updated_info.model_dump(exclude_unset=True), "owner_id": user_id}
+        updated_data = updated_info.model_dump(exclude_unset=True)
         
         for field, value in updated_data.items():
             setattr(task, field, value)
@@ -94,12 +99,16 @@ class TasksService:
         user_id: int,
         db: AsyncSession
     ):
-        result = await db.execute(select(TasksTable).where(TasksTable.id == task_id, TasksTable.owner_id == user_id))
+        result = await db.execute(
+            select(TasksTable)
+            .where(
+                TasksTable.id == task_id, 
+                TasksTable.owner_id == user_id))
         
         task = result.scalar_one_or_none()
         
-        if (task is None):
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if task is None:
+                raise NotFoundError('Задача не найдена')
             
         await db.delete(task)
         await db.commit()

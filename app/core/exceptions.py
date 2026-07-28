@@ -32,3 +32,11 @@ class BadRequestError(AppException):
             error_code="BAD_REQUEST"
         )
 
+class UnauthorizedError(AppException):
+    def __init__(self, detail: str = "Пользователь не авторизован"):
+        super().__init__(
+            status_code=401,
+            detail=detail,
+            error_code="UNAUTHORIZED"
+        )
+

@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .models import ActivityCategoriesTable
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from fastapi import HTTPException, status
+from app.core.exceptions import NotFoundError
+
 class CategoriesService:
 
     @staticmethod
@@ -16,7 +17,7 @@ class CategoriesService:
         db: AsyncSession
     ):
         new_category = ActivityCategoriesTable(
-            **{**category_data.model_dump(), "user_id": user_id}
+            **category_data.model_dump(), user_id=user_id
         )
         
         db.add(new_category)
@@ -38,7 +39,8 @@ class CategoriesService:
         
         categories = result.scalars().all()
         
-        
+        if not categories:
+            raise NotFoundError('Категории не найдены')
         return categories
 
     @staticmethod
@@ -55,7 +57,7 @@ class CategoriesService:
         category = result.scalar_one_or_none()
         
         if (category is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Категория не найдена')
         
         return category
 
@@ -74,7 +76,7 @@ class CategoriesService:
         category = result.scalar_one_or_none()
         
         if (category is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Категория не найдена')
         
         updated_data = category_data.model_dump(exclude_unset=True)
         
@@ -100,7 +102,7 @@ class CategoriesService:
         category = result.scalar_one_or_none()
         
         if (category is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Категория не найдена')
         
         await db.delete(category)
         await db.commit()

@@ -6,6 +6,7 @@ from .schemas import (
     ProjectCreateRequest
 )
 from fastapi import HTTPException, status
+from app.core.exceptions import NotFoundError
 
 class ProjectService: 
 
@@ -22,7 +23,12 @@ class ProjectService:
         )
 
         categories = result.scalars().unique().all()
-        return list(categories)
+
+        if not categories:
+            raise NotFoundError('Проекты не найдены')
+
+
+        return categories
 
     @staticmethod
     async def create_project(
@@ -40,9 +46,7 @@ class ProjectService:
         category = category_result.scalar_one_or_none()
 
         if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
+            raise NotFoundError('Категория не найдена')
 
         new_project = ProjectsTable(**project_data.model_dump())
 
@@ -74,9 +78,7 @@ class ProjectService:
         project = result.scalar_one_or_none()
 
         if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND
-            )
+            raise NotFoundError('Проект не найден')
 
         update_data = project_data.model_dump(exclude_unset=True)
 
@@ -94,12 +96,17 @@ class ProjectService:
         db: AsyncSession,
         user_id: int
     ):
-        result = await db.execute(select(ProjectsTable).join(ActivityCategoriesTable).where(ProjectsTable.id == project_id, ActivityCategoriesTable.user_id == user_id))
+        result = await db.execute(
+            select(ProjectsTable)
+            .join(ActivityCategoriesTable)
+            .where(
+                ProjectsTable.id == project_id, 
+                ActivityCategoriesTable.user_id == user_id))
         
         project = result.scalar_one_or_none()
         
         if (project is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Проект не найден')
             
         await db.delete(project)
         await db.commit()

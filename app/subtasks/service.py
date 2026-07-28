@@ -6,6 +6,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from .models import SubTasksTable
 from sqlalchemy import select
+from app.core.exceptions import NotFoundError
+from app.tasks.models import TasksTable
 class SubtasksService:
 
     @staticmethod
@@ -15,8 +17,19 @@ class SubtasksService:
         db: AsyncSession,
         user_id: int
     ):
+        result = await db.execute(
+             select(TasksTable)
+             .where(
+                  TasksTable.id == task_id,
+                  TasksTable.owner_id == user_id))
+
+        task = result.scalar_one_or_none()
+        
+        if task is None:
+            raise NotFoundError('Задача не найдена')
+        
         subtask = SubTasksTable(
-                {**subtask_data.model_dump(), "owner_id": user_id, "task_id": task_id}
+                **subtask_data.model_dump(), owner_id=user_id, task_id=task_id
             )
         
         db.add(subtask)
@@ -37,6 +50,9 @@ class SubtasksService:
         )) 
         
         tasks = result.scalars().all()
+
+        if not tasks:
+             raise NotFoundError('Подзадачи не найдены')
         
         return tasks
 
@@ -55,8 +71,8 @@ class SubtasksService:
         
         subtask = result.scalar_one_or_none()
         
-        if (subtask is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if subtask is None:
+            raise NotFoundError('Подзадача не найдена')
         
         new_data = subtask_data.model_dump(exclude_unset=True)
         
@@ -82,7 +98,7 @@ class SubtasksService:
         subtask = result.scalar_one_or_none()
         
         if (subtask is None):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise NotFoundError('Подзадача не найдена')
         
         await db.delete(subtask)
         await db.commit()
