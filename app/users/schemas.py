@@ -1,12 +1,19 @@
 from pydantic import BaseModel, Field
 
+NAME_PATTERN = r"^[a-zA-Zа-яА-Я\-]+$"
+EMAIL_PATTERN = r"^[a-zA-Z0-9\-_.]+@[a-zA-Z0-9\-_.]+\.[a-zA-Z0-9\-_.]+$"
 
 class UserBase(BaseModel):
     pass
 
 class UsersCreateRequest(UserBase):
-    name: str
-    email: str
+    name: str = Field(
+        pattern=NAME_PATTERN,
+        max_length=50
+    )
+    email: str = Field(
+        pattern=EMAIL_PATTERN,
+    )
     password: str = Field(
         min_length=8,
         max_length=16,

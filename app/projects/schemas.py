@@ -1,8 +1,8 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjectBase(BaseModel): 
-    name: str
+    name: str = Field(max_length=100)
     description: str
     label: str
 
@@ -18,7 +18,7 @@ class ProjectCreateResponse(ProjectCreateRequest):
     id: int
 
 class ProjectUpdateRequest(BaseModel):
-    name: str | None = None
+    name: str | None = Field(max_length=100, default=None)
     description: str | None = None
     label: str | None = None
 
