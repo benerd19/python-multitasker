@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 NAME_PATTERN = r"^[a-zA-Zа-яА-Я\-]+$"
 EMAIL_PATTERN = r"^[a-zA-Z0-9\-_.]+@[a-zA-Z0-9\-_.]+\.[a-zA-Z0-9\-_.]+$"
+PASSWORD_PATTERN = r"^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]+$"
 
 class UserBase(BaseModel):
     pass
@@ -17,7 +18,7 @@ class UsersCreateRequest(UserBase):
     password: str = Field(
         min_length=8,
         max_length=16,
-        pattern=r"^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]+$",
+        pattern=PASSWORD_PATTERN,
         description="Невалидный пароль"
     )
     avatar: str
@@ -42,6 +43,15 @@ class UsersPartialUpdate(UserBase):
     name: str | None = None
     password: str | None = None
     avatar: str | None = None
+
+class UsersRestorePasswordRequest(BaseModel):
+    token: str
+    password: str = Field(
+        min_length=8,
+        max_length=16,
+        pattern=PASSWORD_PATTERN,
+        description="Невалидный пароль"
+    )
 
 
 

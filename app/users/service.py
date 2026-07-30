@@ -1,15 +1,23 @@
 import asyncio
 
+from fastapi_mail import MessageSchema
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ForbiddenError, NotFoundError, UnauthorizedError, ConflictError
+from app.core.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    UnauthorizedError,
+)
 from app.core.security import (
+    create_token,
     create_tokens,
     decode_token,
     hash_password,
     verify_password,
 )
+from app.mail import mail
 from app.users.schemas import UsersAuthRequest, UsersCreateRequest, UsersPartialUpdate
 
 from .models import UsersTable
@@ -137,6 +145,63 @@ class UsersService:
 
         await db.commit()
 
+    @staticmethod
+    async def restore_password_email(
+        user_id: int,
+        db: AsyncSession
+    ):
+        result = await db.execute(select(UsersTable).where(UsersTable.id == user_id))
+
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            raise NotFoundError('Пользователь не найден')
+
+        token = create_token(user_id)
+
+        message = MessageSchema(
+                    subject='Восстановление пароля',
+                    recipients=[user.email],
+                    body=f"""
+                            <h1>Восстановление пароля</h1>
+                            Токен для восстановления пароля: {token}
+                        """,
+                    subtype='html'
+                )
+
+        await mail.send_message(message)
+        
+
+        
+    @staticmethod
+    async def restore_password(
+        token: str,
+        password: str,
+        db: AsyncSession
+    ):
+        payload = decode_token(token)
+
+        if payload is None:
+            raise UnauthorizedError('Невалидный токен')
+
+        user_id = payload.get('user_id')
+
+        result = await db.execute(select(UsersTable).where(UsersTable.id == user_id))
+
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            raise NotFoundError('Пользователь не найден')
+
+        hashed_password = await asyncio.to_thread(hash_password, password)
+
+        user.password = hashed_password
+
+        await db.commit()
+
+    
+
+        
         
 
 

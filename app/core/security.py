@@ -32,6 +32,19 @@ def create_tokens(data: dict) -> tuple[str, str]:
 def decode_token(token: str) -> dict | None:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+        if payload.get('user_id') is None:
+            return None
+
         return payload
     except PyJWTError:
         return None
+
+def create_token(user_id: int) -> str:
+    token_data = {"user_id": user_id}
+    expire_time = datetime.now(timezone.utc) + timedelta(minutes = 30)
+    token_data.update({"exp": expire_time})
+
+    token = jwt.encode(payload=token_data, key=settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+    return token

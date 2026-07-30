@@ -1,5 +1,13 @@
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_user_id
@@ -11,6 +19,7 @@ from app.users.schemas import (
     UsersCreateResponse,
     UsersGetInfoResponse,
     UsersPartialUpdate,
+    UsersRestorePasswordRequest,
 )
 
 from .service import UsersService
@@ -89,4 +98,24 @@ async def delete_user(
 ):
     
     await UsersService.delete_user(user_id, db)
+
+
+
+@router.post('/auth/forgot-password', status_code=status.HTTP_204_NO_CONTENT)
+async def restore_password_email(
+    background_tasks : BackgroundTasks,
+    user_id: id = Depends(get_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    background_tasks.add_task(
+        UsersService.restore_password_email, user_id, db
+    )
+
+
+@router.patch('/auth/forgot-password', status_code=status.HTTP_204_NO_CONTENT)
+async def restore_password_code(
+    data: UsersRestorePasswordRequest,
+    db: AsyncSession = Depends(get_db)
     
+):
+    await UsersService.restore_password(token=data.token, password=data.password, db=db)
