@@ -3,7 +3,7 @@ import asyncio
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
+from app.core.exceptions import ForbiddenError, NotFoundError, UnauthorizedError, ConflictError
 from app.core.security import (
     create_tokens,
     decode_token,
@@ -23,6 +23,12 @@ class UsersService:
         db: AsyncSession
 
     ):
+        result = await db.execute(select(UsersTable).where(user.email == UsersTable.email))
+        founded_user = result.scalar_one_or_none()
+
+        if founded_user is not None:
+            raise ConflictError('Пользователь с таким email уже существует')
+        
         hashed_password = await asyncio.to_thread(hash_password, user.password)
             
         user_data = user.model_dump()

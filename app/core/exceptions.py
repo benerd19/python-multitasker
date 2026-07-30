@@ -40,3 +40,10 @@ class UnauthorizedError(AppException):
             error_code="UNAUTHORIZED"
         )
 
+class ConflictError(AppException):
+    def __init__(self, detail: str = "Конфликт"):
+        super().__init__(
+            status_code=409,
+            detail=detail,
+            error_code="CONFLICT"
+        )
